@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import pandas as pd
+from statsmodels.graphics.tsaplots import plot_acf
+
 
 
 # ============================================================
@@ -292,5 +294,182 @@ def plot_prices_separately(price_df, figsize=(14, 10), major="2year", date_forma
 
     format_date_axis(axes[3], major=major, date_format=date_format)
 
+    plt.tight_layout()
+    plt.show()
+
+def plot_gold_price_actual_vs_predicted_test(
+    forecast_price_df,
+    figsize=(14, 6)
+):
+    """
+    Trace sur la période de test :
+    - le prix observé de l'or
+    - le prix prédit de l'or
+
+    Paramètres
+    ----------
+    forecast_price_df : pd.DataFrame
+        Doit contenir :
+        - date
+        - gold_price_actual
+        - gold_price_pred
+    """
+    required_columns = ["date", "gold_price_actual", "gold_price_pred"]
+    missing_cols = [col for col in required_columns if col not in forecast_price_df.columns]
+    if missing_cols:
+        raise ValueError(
+            f"Colonnes manquantes dans forecast_price_df : {missing_cols}. "
+            f"Colonnes disponibles : {list(forecast_price_df.columns)}"
+        )
+
+    df = forecast_price_df.copy()
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.sort_values("date").reset_index(drop=True)
+
+    plt.figure(figsize=figsize)
+    plt.plot(df["date"], df["gold_price_actual"], label="Prix observé de l'or")
+    plt.plot(df["date"], df["gold_price_pred"], label="Prix prédit de l'or", linestyle="--")
+    plt.title("Prix observé vs prix prédit de l'or sur le test")
+    plt.xlabel("Date")
+    plt.ylabel("Prix")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+# ============================================================
+# 3) Rendements observés vs rendements prédits sur le test
+# ============================================================
+def plot_gold_returns_actual_vs_predicted_test(
+    forecast_df,
+    figsize=(14, 6)
+):
+    """
+    Trace sur la période de test :
+    - le rendement observé de l'or
+    - le rendement prédit de l'or
+
+    Paramètres
+    ----------
+    forecast_df : pd.DataFrame
+        Doit contenir :
+        - date
+        - gold_ret_actual
+        - gold_ret_pred
+    """
+    required_columns = ["date", "gold_ret_actual", "gold_ret_pred"]
+    missing_cols = [col for col in required_columns if col not in forecast_df.columns]
+    if missing_cols:
+        raise ValueError(
+            f"Colonnes manquantes dans forecast_df : {missing_cols}. "
+            f"Colonnes disponibles : {list(forecast_df.columns)}"
+        )
+
+    df = forecast_df.copy()
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.sort_values("date").reset_index(drop=True)
+
+    plt.figure(figsize=figsize)
+    plt.plot(df["date"], df["gold_ret_actual"], label="Rendement observé de l'or")
+    plt.plot(df["date"], df["gold_ret_pred"], label="Rendement prédit de l'or", linestyle="--")
+    plt.title("Rendements observés vs rendements prédits de l'or sur le test")
+    plt.xlabel("Date")
+    plt.ylabel("Rendement")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+
+
+# ============================================================
+# 12) Vérification du DataFrame des résidus VAR de l'or
+# ============================================================
+def check_gold_residuals_dataframe(gold_resid_df):
+    """
+    Vérifie que le DataFrame contient bien les colonnes attendues.
+
+    Paramètres
+    ----------
+    gold_resid_df : pd.DataFrame
+        DataFrame contenant :
+        - date
+        - gold_var_resid
+    """
+    required_columns = ["date", "gold_var_resid"]
+
+    missing_cols = [col for col in required_columns if col not in gold_resid_df.columns]
+    if missing_cols:
+        raise ValueError(
+            f"Colonnes manquantes dans gold_resid_df : {missing_cols}. "
+            f"Colonnes disponibles : {list(gold_resid_df.columns)}"
+        )
+
+
+# ============================================================
+# 13) Graphique des résidus de l'or
+# ============================================================
+def plot_gold_var_residuals(gold_resid_df, figsize=(14, 5)):
+    """
+    Trace la série temporelle des résidus de l'équation de l'or.
+    """
+    check_gold_residuals_dataframe(gold_resid_df)
+
+    df = gold_resid_df.copy()
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.sort_values("date").reset_index(drop=True)
+
+    plt.figure(figsize=figsize)
+    plt.plot(df["date"], df["gold_var_resid"])
+    plt.title("Résidus de l'équation de l'or du VAR")
+    plt.xlabel("Date")
+    plt.ylabel("Résidu")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+# ============================================================
+# 14) Graphique des résidus au carré
+# ============================================================
+def plot_gold_var_squared_residuals(gold_resid_df, figsize=(14, 5)):
+    """
+    Trace la série temporelle des résidus au carré.
+    """
+    check_gold_residuals_dataframe(gold_resid_df)
+
+    df = gold_resid_df.copy()
+    df["date"] = pd.to_datetime(df["date"])
+    df = df.sort_values("date").reset_index(drop=True)
+    df["gold_var_resid_sq"] = df["gold_var_resid"] ** 2
+
+    plt.figure(figsize=figsize)
+    plt.plot(df["date"], df["gold_var_resid_sq"])
+    plt.title("Résidus au carré de l'équation de l'or du VAR")
+    plt.xlabel("Date")
+    plt.ylabel("Résidu au carré")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+# ============================================================
+# 15) ACF des résidus au carré
+# ============================================================
+def plot_gold_var_squared_residuals_acf(gold_resid_df, lags=30, figsize=(10, 5)):
+    """
+    Trace l'ACF des résidus au carré.
+    """
+    check_gold_residuals_dataframe(gold_resid_df)
+
+    df = gold_resid_df.copy()
+    df = df.sort_values("date").reset_index(drop=True)
+    squared_resid = (df["gold_var_resid"] ** 2).dropna()
+
+    plt.figure(figsize=figsize)
+    plot_acf(squared_resid, lags=lags)
+    plt.title("ACF des résidus au carré de l'or")
     plt.tight_layout()
     plt.show()

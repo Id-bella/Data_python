@@ -1,5 +1,6 @@
 import pandas as pd
 from statsmodels.tsa.stattools import adfuller
+from statsmodels.stats.diagnostic import het_arch
 
 
 # ============================================================
@@ -456,3 +457,93 @@ def print_granger_conclusion(summary_dict):
     else:
         print("Conclusion : on ne rejette pas l'hypothèse nulle au seuil de 5%.")
         print("Pas d'évidence de causalité de Granger au sens prédictif.")
+
+
+# ============================================================
+# 4) Vérification du DataFrame des résidus VAR de l'or
+# ============================================================
+def check_gold_residuals_dataframe(gold_resid_df):
+    """
+    Vérifie que le DataFrame contient bien les colonnes attendues.
+
+    Paramètres
+    ----------
+    gold_resid_df : pd.DataFrame
+        DataFrame contenant :
+        - date
+        - gold_var_resid
+    """
+    required_columns = ["date", "gold_var_resid"]
+
+    missing_cols = [col for col in required_columns if col not in gold_resid_df.columns]
+    if missing_cols:
+        raise ValueError(
+            f"Colonnes manquantes dans gold_resid_df : {missing_cols}. "
+            f"Colonnes disponibles : {list(gold_resid_df.columns)}"
+        )
+
+
+# ============================================================
+# 5) Test ARCH-LM sur les résidus de l'or
+# ============================================================
+def arch_lm_test_gold_residuals(gold_resid_df, nlags=12):
+    """
+    Effectue un test ARCH-LM sur les résidus de l'équation de l'or.
+
+    Paramètres
+    ----------
+    gold_resid_df : pd.DataFrame
+        DataFrame contenant :
+        - date
+        - gold_var_resid
+    nlags : int
+        Nombre de retards utilisés dans le test.
+
+    Retour
+    ------
+    dict
+        Résultats du test ARCH-LM.
+    """
+    check_gold_residuals_dataframe(gold_resid_df)
+
+    df = gold_resid_df.copy()
+    resid = df["gold_var_resid"].dropna()
+
+    lm_stat, lm_pvalue, f_stat, f_pvalue = het_arch(resid, nlags=nlags)
+
+    return {
+        "nlags": nlags,
+        "lm_statistic": lm_stat,
+        "lm_pvalue": lm_pvalue,
+        "f_statistic": f_stat,
+        "f_pvalue": f_pvalue,
+        "reject_h0_5pct": lm_pvalue < 0.05
+    }
+
+
+# ============================================================
+# 6) Conclusion textuelle du test ARCH-LM
+# ============================================================
+def print_arch_lm_conclusion(gold_resid_df, nlags=12):
+    """
+    Affiche une conclusion simple du test ARCH-LM.
+
+    Hypothèse nulle :
+    absence d'effet ARCH.
+    """
+    res = arch_lm_test_gold_residuals(gold_resid_df, nlags=nlags)
+
+    print("Test ARCH-LM sur les résidus de l'or")
+    print("------------------------------------")
+    print(f"Nombre de lags testés : {res['nlags']}")
+    print(f"LM statistic : {res['lm_statistic']:.6f}")
+    print(f"LM p-value : {res['lm_pvalue']:.6f}")
+    print(f"F statistic : {res['f_statistic']:.6f}")
+    print(f"F p-value : {res['f_pvalue']:.6f}")
+
+    if res["reject_h0_5pct"]:
+        print("Conclusion : on rejette l'hypothèse nulle au seuil de 5%.")
+        print("Il existe un effet ARCH dans les résidus.")
+    else:
+        print("Conclusion : on ne rejette pas l'hypothèse nulle au seuil de 5%.")
+        print("Pas d'évidence claire d'effet ARCH dans les résidus.")
