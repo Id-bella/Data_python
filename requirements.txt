@@ -7,3 +7,6 @@ lxml
 openpyxl
 xlrd
 python-dotenv
+plotly 
+seaborn 
+scipy

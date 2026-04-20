@@ -1,7 +1,32 @@
+"""
+data_vis.py
+===========
+Visualisations pour le projet de prédiction du prix de l'or via VAR.
+
+Fonctions exportées :
+    - load_and_merge_data()          -> DataFrame fusionné mensuel
+    - plot_timeseries_multi(df)      -> Séries temporelles multi-variables (Plotly + Matplotlib)
+    - plot_correlation_heatmap(df)   -> Heatmap des corrélations (Plotly + Matplotlib)
+    - plot_geopolitical_timeline(df) -> Timeline événementielle (Plotly + Matplotlib)
+"""
+
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import pandas as pd
 from statsmodels.graphics.tsaplots import plot_acf
+import os
+import warnings
+import numpy as np
+import matplotlib.patches as mpatches
+import seaborn as sns
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
+from scipy import stats
+from scipy.stats import skew, kurtosis
+import xlrd
+
+warnings.filterwarnings("ignore")
 
 
 
@@ -475,34 +500,6 @@ def plot_gold_var_squared_residuals_acf(gold_resid_df, lags=30, figsize=(10, 5))
     plt.show()
 
 
-####
-
-"""
-data_vis.py
-===========
-Visualisations pour le projet de prédiction du prix de l'or via VAR.
-
-Fonctions exportées :
-    - load_and_merge_data()          -> DataFrame fusionné mensuel
-    - plot_timeseries_multi(df)      -> Séries temporelles multi-variables (Plotly + Matplotlib)
-    - plot_correlation_heatmap(df)   -> Heatmap des corrélations (Plotly + Matplotlib)
-    - plot_geopolitical_timeline(df) -> Timeline événementielle (Plotly + Matplotlib)
-"""
-
-import os
-import warnings
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import matplotlib.dates as mdates
-import seaborn as sns
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-import xlrd
-
-warnings.filterwarnings("ignore")
 
 # ─────────────────────────────────────────────
 # Palette & style globaux
@@ -1094,6 +1091,80 @@ def plot_scatter_matrix(df: pd.DataFrame, save: bool = True):
     fig.show()
 
 
+
+
+# ─────────────────────────────────────────────
+# 6) Distributions des rendements
+# ─────────────────────────────────────────────
+
+def plot_return_distributions(var_df, save=True):
+
+    fig, axes = plt.subplots(2, 3, figsize=(15, 9))
+    axes = axes.flatten()
+
+    variables = {
+        'gold_ret': ("Or (GC=F)", "goldenrod"),
+        'sp500_ret': ("S&P 500", "steelblue"),
+        'dxy_ret': ("Dollar (DXY)", "seagreen"),
+        'vix_ret': ("VIX", "firebrick"),
+        'cpi_ret': ("CPI", "mediumpurple"),
+        'gpr_ret': ("GPR (Géopolitique)", "darkorange"),
+    }
+
+    for ax, (col, (label, color)) in zip(axes, variables.items()):
+        if col not in var_df.columns:
+            ax.set_visible(False)
+            continue
+
+        data = var_df[col].dropna()
+
+        # Histogramme
+        ax.hist(data, bins=80, density=True, color=color, alpha=0.4, edgecolor='white')
+
+        xmin, xmax = ax.get_xlim()
+        x = np.linspace(xmin, xmax, 200)
+
+        # Normale théorique
+        mu, sigma = data.mean(), data.std()
+        ax.plot(x, stats.norm.pdf(x, mu, sigma), 'k--', linewidth=1.2, label='Normale')
+
+        # KDE empirique
+        kde = stats.gaussian_kde(data)
+        ax.plot(x, kde(x), color=color, linewidth=1.8, label='KDE empirique')
+
+        # Moments
+        sk = skew(data)
+        ku = kurtosis(data)
+
+        ax.set_title(f"{label}\nskew={sk:.2f} | kurt={ku:.2f}", fontsize=10)
+        ax.legend(fontsize=8)
+        ax.set_xlabel("Rendement log")
+        ax.set_ylabel("Densité")
+
+        # Jarque-Bera
+        jb_stat, jb_p = stats.jarque_bera(data)
+        ax.text(0.97, 0.95, f"JB p={jb_p:.3f}",
+                transform=ax.transAxes,
+                fontsize=8,
+                ha='right',
+                va='top',
+                color='red' if jb_p < 0.05 else 'green')
+
+    plt.suptitle(
+        "Distribution des rendements logarithmiques\n"
+        "(courbe noire = normale | JB = test de normalité)",
+        fontsize=12,
+        y=1.01
+    )
+
+    plt.tight_layout()
+    
+    if save:
+        plt.savefig(os.path.join(OUTPUT_DIR, "return_distributions.png"),
+                    dpi=150, bbox_inches='tight')
+    plt.show()
+
+
 # ─────────────────────────────────────────────
 # 6) CARTE CHOROPLÈTHE GPR PAR PAYS
 # ─────────────────────────────────────────────
@@ -1258,3 +1329,4 @@ def plot_gpr_choropleth(
         print(f"[Plotly] Carte GPR → {path}")
 
     fig.show()
+
