@@ -28,11 +28,6 @@ import xlrd
 
 warnings.filterwarnings("ignore")
 
-
-
-# ============================================================
-# 1) Vérification minimale du DataFrame
-# ============================================================
 def check_var_dataframe(var_df):
     """
     Vérifie que le DataFrame contient bien les colonnes attendues.
@@ -56,9 +51,6 @@ def check_var_dataframe(var_df):
         )
 
 
-# ============================================================
-# 2) Vérification minimale du DataFrame de prix
-# ============================================================
 def check_price_dataframe(price_df):
     """
     Vérifie que le DataFrame contient bien les colonnes attendues
@@ -83,9 +75,7 @@ def check_price_dataframe(price_df):
         )
 
 
-# ============================================================
-# 3) Préparation simple de la date
-# ============================================================
+
 def prepare_dates(df):
     """
     S'assure que la colonne date est bien au format datetime.
@@ -104,9 +94,6 @@ def prepare_dates(df):
     return out
 
 
-# ============================================================
-# 4) Formatage des dates sur les axes matplotlib
-# ============================================================
 def format_date_axis(ax, major="year", date_format="%Y"):
     """
     Formate l'axe des dates pour améliorer la lisibilité.
@@ -143,9 +130,6 @@ def format_date_axis(ax, major="year", date_format="%Y"):
     plt.setp(ax.get_xticklabels(), rotation=45, ha="right")
 
 
-# ============================================================
-# 5) Tracé de toutes les séries de rendements
-# ============================================================
 def plot_all_returns(var_df, figsize=(14, 8), major="2year", date_format="%Y"):
     """
     Trace les 4 séries de rendements sur un même graphique.
@@ -172,9 +156,6 @@ def plot_all_returns(var_df, figsize=(14, 8), major="2year", date_format="%Y"):
     plt.show()
 
 
-# ============================================================
-# 6) Tracé individuel d'une seule série
-# ============================================================
 def plot_single_series(df, series_col, title=None, figsize=(14, 5), major="2year", date_format="%Y"):
     """
     Trace une seule série temporelle.
@@ -203,9 +184,6 @@ def plot_single_series(df, series_col, title=None, figsize=(14, 5), major="2year
     plt.show()
 
 
-# ============================================================
-# 7) Tracé des 4 séries de rendements séparément
-# ============================================================
 def plot_returns_separately(var_df, figsize=(14, 10), major="2year", date_format="%Y"):
     """
     Trace les 4 séries dans 4 graphiques superposés.
@@ -238,9 +216,6 @@ def plot_returns_separately(var_df, figsize=(14, 10), major="2year", date_format
     plt.show()
 
 
-# ============================================================
-# 8) Fusion des prix bruts
-# ============================================================
 def build_price_dataframe(cleaned_data):
     """
     Fusionne les séries de prix bruts nettoyées sur la date.
@@ -259,9 +234,6 @@ def build_price_dataframe(cleaned_data):
     return price_df
 
 
-# ============================================================
-# 9) Tracé de tous les prix bruts sur un même graphique
-# ============================================================
 def plot_all_prices(price_df, figsize=(14, 8), major="2year", date_format="%Y"):
     """
     Trace les 4 séries de prix bruts sur un même graphique.
@@ -288,9 +260,6 @@ def plot_all_prices(price_df, figsize=(14, 8), major="2year", date_format="%Y"):
     plt.show()
 
 
-# ============================================================
-# 10) Tracé des prix bruts séparément
-# ============================================================
 def plot_prices_separately(price_df, figsize=(14, 10), major="2year", date_format="%Y"):
     """
     Trace les 4 séries de prix bruts dans 4 graphiques superposés.
@@ -321,6 +290,7 @@ def plot_prices_separately(price_df, figsize=(14, 10), major="2year", date_forma
 
     plt.tight_layout()
     plt.show()
+
 
 def plot_gold_price_actual_vs_predicted_test(
     forecast_price_df,
@@ -363,9 +333,6 @@ def plot_gold_price_actual_vs_predicted_test(
     plt.show()
 
 
-# ============================================================
-# 3) Rendements observés vs rendements prédits sur le test
-# ============================================================
 def plot_gold_returns_actual_vs_predicted_test(
     forecast_df,
     figsize=(14, 6)
@@ -407,11 +374,6 @@ def plot_gold_returns_actual_vs_predicted_test(
     plt.show()
 
 
-
-
-# ============================================================
-# 12) Vérification du DataFrame des résidus VAR de l'or
-# ============================================================
 def check_gold_residuals_dataframe(gold_resid_df):
     """
     Vérifie que le DataFrame contient bien les colonnes attendues.
@@ -433,9 +395,6 @@ def check_gold_residuals_dataframe(gold_resid_df):
         )
 
 
-# ============================================================
-# 13) Graphique des résidus de l'or
-# ============================================================
 def plot_gold_var_residuals(gold_resid_df, figsize=(14, 5)):
     """
     Trace la série temporelle des résidus de l'équation de l'or.
@@ -456,9 +415,6 @@ def plot_gold_var_residuals(gold_resid_df, figsize=(14, 5)):
     plt.show()
 
 
-# ============================================================
-# 14) Graphique des résidus au carré
-# ============================================================
 def plot_gold_var_squared_residuals(gold_resid_df, figsize=(14, 5)):
     """
     Trace la série temporelle des résidus au carré.
@@ -480,9 +436,6 @@ def plot_gold_var_squared_residuals(gold_resid_df, figsize=(14, 5)):
     plt.show()
 
 
-# ============================================================
-# 15) ACF des résidus au carré
-# ============================================================
 def plot_gold_var_squared_residuals_acf(gold_resid_df, lags=30, figsize=(10, 5)):
     """
     Trace l'ACF des résidus au carré.
@@ -530,7 +483,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 DATA_DIR = "data"
 
 # ─────────────────────────────────────────────
-# 0) Chargement & fusion des données
+#  Préparation des données pour des visualisations plotly
 # ─────────────────────────────────────────────
 
 def _load_yahoo(name: str) -> pd.Series:
@@ -543,7 +496,7 @@ def _load_yahoo(name: str) -> pd.Series:
     series = df[close_col].dropna()
     series.index = pd.to_datetime(series.index)
     # Rééchantillonnage mensuel (dernier jour du mois)
-    return series.resample("ME").last().rename(name)
+    return series.resample("ME").mean().rename(name)
 
 
 def _load_cpi() -> pd.Series:
@@ -553,7 +506,7 @@ def _load_cpi() -> pd.Series:
     df = df.set_index("date").sort_index()
     series = df["cpi"].dropna()
     series.index = pd.to_datetime(series.index)
-    return series.resample("ME").last().rename("cpi")
+    return series.resample("ME").mean().rename("cpi")
 
 
 def _load_gpr() -> pd.Series:
@@ -657,17 +610,11 @@ EVENTS = [
 ]
 
 
-# ─────────────────────────────────────────────
-# 1) SÉRIES TEMPORELLES MULTI-VARIABLES
-# ─────────────────────────────────────────────
-
 def plot_timeseries_multi(df: pd.DataFrame, save: bool = True):
     """
     Graphique 6 panneaux avec les séries normalisées + panneau or brut.
-    Versions Plotly (interactive) et Matplotlib (publication).
+    Version Plotly (interactive).
     """
-
-    # ── Normalisation base 100 ──────────────────
     df_norm = (df / df.iloc[0]) * 100
 
     var_labels = {
@@ -678,10 +625,6 @@ def plot_timeseries_multi(df: pd.DataFrame, save: bool = True):
         "cpi":   "CPI (Inflation)",
         "gpr":   "Indice GPR",
     }
-
-    # ══════════════════════════════════════════
-    # PLOTLY — version interactive
-    # ══════════════════════════════════════════
     fig = make_subplots(
         rows=3, cols=2,
         shared_xaxes=True,
@@ -740,10 +683,6 @@ def plot_timeseries_multi(df: pd.DataFrame, save: bool = True):
     fig.show()
 
 
-# ─────────────────────────────────────────────
-# 2) HEATMAP DES CORRÉLATIONS
-# ─────────────────────────────────────────────
-
 def plot_correlation_heatmap(df: pd.DataFrame, save: bool = True):
     """
     Heatmap des corrélations de Pearson (niveaux + différences premières).
@@ -767,9 +706,6 @@ def plot_correlation_heatmap(df: pd.DataFrame, save: bool = True):
 
     labels = list(var_labels.values())
 
-    # ══════════════════════════════════════════
-    # PLOTLY — deux heatmaps côte à côte
-    # ══════════════════════════════════════════
     fig = make_subplots(
         rows=1, cols=2,
         subplot_titles=[
@@ -827,10 +763,6 @@ def plot_correlation_heatmap(df: pd.DataFrame, save: bool = True):
     fig.show()
 
 
-# ─────────────────────────────────────────────
-# 3) TIMELINE GÉOPOLITIQUE
-# ─────────────────────────────────────────────
-
 def plot_geopolitical_timeline(df: pd.DataFrame, save: bool = True):
     """
     Cours de l'or + GPR en fond + annotations des grands événements.
@@ -840,9 +772,6 @@ def plot_geopolitical_timeline(df: pd.DataFrame, save: bool = True):
     gold_series = df["gold"]
     gpr_series  = df["gpr"]
 
-    # ══════════════════════════════════════════
-    # PLOTLY
-    # ══════════════════════════════════════════
     fig = make_subplots(specs=[[{"secondary_y": True}]])
 
     # GPR en fond (area)
@@ -857,7 +786,6 @@ def plot_geopolitical_timeline(df: pd.DataFrame, save: bool = True):
         secondary_y=True,
     )
 
-    # Or (ligne principale)
     fig.add_trace(
         go.Scatter(
             x=gold_series.index, y=gold_series.values,
@@ -925,9 +853,6 @@ def plot_geopolitical_timeline(df: pd.DataFrame, save: bool = True):
 
     fig.show()
 
-# ─────────────────────────────────────────────
-# 4) ÉVOLUTION NORMALISÉE — STYLE CLUSTER LINES
-# ─────────────────────────────────────────────
 
 def plot_normalized_evolution(df: pd.DataFrame, save: bool = True):
     """
@@ -948,9 +873,6 @@ def plot_normalized_evolution(df: pd.DataFrame, save: bool = True):
         "gpr":   "Indice GPR",
     }
 
-    # ══════════════════════════════════════════
-    # PLOTLY
-    # ══════════════════════════════════════════
     fig = go.Figure()
 
     for col in df_norm.columns:
@@ -1009,10 +931,6 @@ def plot_normalized_evolution(df: pd.DataFrame, save: bool = True):
     fig.show()
 
 
-# ─────────────────────────────────────────────
-# 5) SCATTER MATRIX (PAIRPLOT)
-# ─────────────────────────────────────────────
-
 def plot_scatter_matrix(df: pd.DataFrame, save: bool = True):
     """
     Scatter matrix complète : chaque variable vs chaque autre,
@@ -1032,9 +950,6 @@ def plot_scatter_matrix(df: pd.DataFrame, save: bool = True):
     cols   = list(df.columns)
     labels = [var_labels[c] for c in cols]
 
-    # ══════════════════════════════════════════
-    # PLOTLY — splom natif
-    # ══════════════════════════════════════════
     # Couleur des points = valeur normalisée de l'or
     gold_norm = (df["gold"] - df["gold"].min()) / (df["gold"].max() - df["gold"].min())
 
@@ -1090,12 +1005,6 @@ def plot_scatter_matrix(df: pd.DataFrame, save: bool = True):
 
     fig.show()
 
-
-
-
-# ─────────────────────────────────────────────
-# 6) Distributions des rendements
-# ─────────────────────────────────────────────
 
 def plot_return_distributions(var_df, save=True):
 
@@ -1164,169 +1073,113 @@ def plot_return_distributions(var_df, save=True):
                     dpi=150, bbox_inches='tight')
     plt.show()
 
-
-# ─────────────────────────────────────────────
-# 6) CARTE CHOROPLÈTHE GPR PAR PAYS
-# ─────────────────────────────────────────────
-
-def plot_gpr_choropleth(
-    gpr_country_path: str,
-    year: int = None,
-    animate: bool = True,
-    save: bool = True,
-):
+ 
+def plot_gold_daily(save: bool = True):
     """
-    Carte choroplèthe du GPR par pays.
-
-    Paramètres
-    ----------
-    gpr_country_path : str
-        Chemin vers le fichier Excel GPR par pays
-        (ex: 'data/gpr_country_raw.xlsx' depuis matteoiacoviello.com/gpr.htm).
-    year : int, optional
-        Si fourni et animate=False, affiche uniquement cette année.
-    animate : bool
-        Si True, produit une carte animée (slider annuel). Plotly uniquement.
-    save : bool
-        Sauvegarde le HTML dans figures/.
-
-    Notes
-    -----
-    Le fichier GPR pays de Caldara & Iacoviello contient généralement
-    les colonnes : Country, ISO3, Year, GPRC (GPR par pays).
-    Ajuste `country_col`, `iso_col`, `year_col`, `value_col` si besoin.
+    Trace le prix de l'or en données quotidiennes brutes (avant rééchantillonnage).
+    Candlestick OHLC + moyennes mobiles 50j / 200j + volume en sous-graphique.
     """
-
-    # ── Chargement ──────────────────────────────
-    ext = os.path.splitext(gpr_country_path)[1].lower()
-    try:
-        df_raw = pd.read_excel(gpr_country_path, engine="openpyxl" if ext == ".xlsx" else "xlrd")
-    except Exception:
-        df_raw = pd.read_excel(gpr_country_path)
-
-    # Détection automatique des colonnes
-    cols_lower = {c: c.lower() for c in df_raw.columns}
-
-    country_col = next((c for c, cl in cols_lower.items()
-                        if "country" in cl or "nation" in cl), df_raw.columns[0])
-    iso_col     = next((c for c, cl in cols_lower.items()
-                        if "iso" in cl or "code" in cl), None)
-    year_col    = next((c for c, cl in cols_lower.items()
-                        if "year" in cl), None)
-    value_col   = next((c for c, cl in cols_lower.items()
-                        if "gprc" in cl or "gpr" in cl), df_raw.columns[-1])
-
-    print(f"Colonnes détectées → pays: '{country_col}' | iso: '{iso_col}' "
-          f"| année: '{year_col}' | valeur: '{value_col}'")
-
-    df_map = df_raw[[c for c in [country_col, iso_col, year_col, value_col]
-                     if c is not None]].copy()
-    df_map.columns = (["country"] +
-                      (["iso3"] if iso_col else []) +
-                      (["year"] if year_col else []) +
-                      ["gpr"])
-    df_map["gpr"] = pd.to_numeric(df_map["gpr"], errors="coerce")
-    df_map = df_map.dropna(subset=["gpr"])
-
-    if year_col:
-        df_map["year"] = df_map["year"].astype(int)
-
-    location_col = "iso3" if iso_col else "country"
-    location_type = "ISO-3" if iso_col else "country names"
-
-    # ── Plotly choroplèthe ────────────────────
-    if animate and year_col:
-        # Carte animée avec slider annuel
-        df_map["year_str"] = df_map["year"].astype(str)
-
-        fig = px.choropleth(
-            df_map.sort_values("year"),
-            locations=location_col,
-            locationmode=location_type,
-            color="gpr",
-            hover_name="country",
-            animation_frame="year_str",
-            color_continuous_scale=[
-                [0.0,  "#0D0D2B"],
-                [0.2,  "#1a3a6b"],
-                [0.4,  "#4A90D9"],
-                [0.6,  "#F39C12"],
-                [0.8,  "#E74C3C"],
-                [1.0,  "#7B241C"],
-            ],
-            range_color=[df_map["gpr"].quantile(0.05),
-                         df_map["gpr"].quantile(0.95)],
-            projection="natural earth",
-            labels={"gpr": "GPR", "year_str": "Année"},
-            title="<b>Indice GPR par pays (Caldara & Iacoviello)</b>",
-        )
-    else:
-        # Carte statique (année choisie ou moyenne)
-        if year and year_col:
-            df_year = df_map[df_map["year"] == year]
-            subtitle = f" — {year}"
-        elif year_col:
-            df_year = df_map.groupby(location_col, as_index=False)["gpr"].mean()
-            subtitle = " — Moyenne toutes années"
-        else:
-            df_year = df_map
-            subtitle = ""
-
-        fig = px.choropleth(
-            df_year,
-            locations=location_col,
-            locationmode=location_type,
-            color="gpr",
-            hover_name="country" if "country" in df_year.columns else location_col,
-            color_continuous_scale=[
-                [0.0,  "#0D0D2B"],
-                [0.2,  "#1a3a6b"],
-                [0.4,  "#4A90D9"],
-                [0.6,  "#F39C12"],
-                [0.8,  "#E74C3C"],
-                [1.0,  "#7B241C"],
-            ],
-            projection="natural earth",
-            labels={"gpr": "GPR"},
-            title=f"<b>Indice GPR par pays (Caldara & Iacoviello){subtitle}</b>",
-        )
-
+ 
+    path = os.path.join(DATA_DIR, "gold.csv")
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Fichier introuvable : {path}. Lance download_all() d'abord.")
+ 
+    # ── Chargement du CSV brut Yahoo Finance ───
+    df_raw = pd.read_csv(path, header=[0, 1], index_col=0, parse_dates=True)
+    df_raw.columns = ["_".join(col).strip() for col in df_raw.columns]
+    df_raw.index   = pd.to_datetime(df_raw.index)
+ 
+    open_col   = next(c for c in df_raw.columns if "Open"   in c)
+    high_col   = next(c for c in df_raw.columns if "High"   in c)
+    low_col    = next(c for c in df_raw.columns if "Low"    in c)
+    close_col  = next(c for c in df_raw.columns if "Close"  in c and "Adj" not in c)
+    volume_col = next((c for c in df_raw.columns if "Volume" in c), None)
+ 
+    df_raw = df_raw.dropna(subset=[close_col])
+ 
+    # Moyennes mobiles
+    df_raw["ma50"]  = df_raw[close_col].rolling(50).mean()
+    df_raw["ma200"] = df_raw[close_col].rolling(200).mean()
+ 
+    # ── Subplots : prix + volume ────────────────
+    rows        = 2 if volume_col else 1
+    row_heights = [0.75, 0.25] if volume_col else [1.0]
+ 
+    fig = make_subplots(
+        rows=rows, cols=1,
+        shared_xaxes=True,
+        vertical_spacing=0.04,
+        row_heights=row_heights,
+    )
+ 
+    # Candlestick
+    fig.add_trace(go.Candlestick(
+        x=df_raw.index,
+        open=df_raw[open_col], high=df_raw[high_col],
+        low=df_raw[low_col],   close=df_raw[close_col],
+        name="Or (OHLC)",
+        increasing=dict(line=dict(color="#D4AF37"), fillcolor="#D4AF37"),
+        decreasing=dict(line=dict(color="#6B4E0A"), fillcolor="#6B4E0A"),
+    ), row=1, col=1)
+ 
+    # MM 50j
+    fig.add_trace(go.Scatter(
+        x=df_raw.index, y=df_raw["ma50"],
+        name="MM 50j",
+        line=dict(color="#4A90D9", width=1.3, dash="dot"),
+        hovertemplate="MM50: $%{y:,.0f}<extra></extra>",
+    ), row=1, col=1)
+ 
+    # MM 200j
+    fig.add_trace(go.Scatter(
+        x=df_raw.index, y=df_raw["ma200"],
+        name="MM 200j",
+        line=dict(color="#E74C3C", width=1.3, dash="dash"),
+        hovertemplate="MM200: $%{y:,.0f}<extra></extra>",
+    ), row=1, col=1)
+ 
+    # Volume
+    if volume_col:
+        colors_vol = [
+            "#D4AF37" if c >= o else "#6B4E0A"
+            for c, o in zip(df_raw[close_col], df_raw[open_col])
+        ]
+        fig.add_trace(go.Bar(
+            x=df_raw.index, y=df_raw[volume_col],
+            name="Volume",
+            marker_color=colors_vol,
+            opacity=0.55,
+            hovertemplate="%{x|%d %b %Y}<br>Vol: %{y:,.0f}<extra></extra>",
+        ), row=2, col=1)
+ 
     fig.update_layout(
         template=PLOTLY_TEMPLATE,
+        title=dict(
+            text="<b>Prix de l'Or — Données quotidiennes (2005–présent)</b>",
+            font=dict(size=17, color="#D4AF37"), x=0.5,
+        ),
+        height=650,
         paper_bgcolor="#0D0D0D",
-        geo=dict(
-            bgcolor="#0D0D0D",
-            showframe=False,
-            showcoastlines=True,
-            coastlinecolor="#2A2A2A",
-            showland=True, landcolor="#1A1A1A",
-            showocean=True, oceancolor="#0D0D0D",
-            showlakes=False,
-            projection_type="natural earth",
-        ),
-        coloraxis_colorbar=dict(
-            title="GPR",
-            title_font=dict(color="#CCCCCC"),
-            tickfont=dict(color="#CCCCCC"),
-            bgcolor="rgba(0,0,0,0.5)",
-        ),
-        title_font=dict(size=17, color="#D4AF37"),
-        title_x=0.5,
-        height=560,
-        margin=dict(t=70, b=20, l=20, r=20),
+        plot_bgcolor="#111111",
         font=dict(color="#CCCCCC", family="Georgia"),
+        xaxis_rangeslider_visible=False,
+        hovermode="x unified",
+        legend=dict(
+            orientation="h", x=0.5, xanchor="center", y=1.02,
+            bgcolor="rgba(0,0,0,0)", font=dict(size=10),
+        ),
+        margin=dict(t=80, b=40, l=60, r=30),
     )
-
-    if animate and year_col:
-        # Style du slider
-        fig.layout.updatemenus[0].bgcolor = "#1A1A1A"
-        fig.layout.updatemenus[0].font = dict(color="#CCCCCC")
-
+ 
+    fig.update_xaxes(gridcolor="#1E1E1E", tickformat="%Y")
+    fig.update_yaxes(gridcolor="#1E1E1E", tickprefix="$", row=1, col=1)
+    if volume_col:
+        fig.update_yaxes(gridcolor="#1E1E1E", row=2, col=1)
+ 
     if save:
-        fname = "gpr_choropleth_animated.html" if (animate and year_col) else "gpr_choropleth.html"
-        path  = os.path.join(OUTPUT_DIR, fname)
-        fig.write_html(path)
-        print(f"[Plotly] Carte GPR → {path}")
-
+        out = os.path.join(OUTPUT_DIR, "gold_daily.html")
+        fig.write_html(out)
+        print(f"[Plotly] Or quotidien → {out}")
+ 
     fig.show()
 
