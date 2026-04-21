@@ -472,23 +472,6 @@ def _hex_to_rgba(hex_color: str, alpha: float = 0.12) -> str:
 
 
 
-# ─────────────────────────────────────────────
-# ÉVÉNEMENTS GÉOPOLITIQUES (timeline)
-# ─────────────────────────────────────────────
-
-EVENTS = [
-    ("2008-09-15", "Faillite\nLehman Brothers",  "#E74C3C"),
-    ("2010-05-01", "Crise dette\neuropéenne",      "#E67E22"),
-    ("2011-08-01", "Pic historique\nor ($1900)",   "#D4AF37"),
-    ("2016-06-23", "Brexit",                        "#9B59B6"),
-    ("2018-03-01", "Guerre\ncommerciale US-Chine", "#4A90D9"),
-    ("2020-03-11", "COVID-19\nPandémie",            "#E74C3C"),
-    ("2020-08-01", "ATH Or\n($2075)",               "#D4AF37"),
-    ("2022-02-24", "Invasion\nUkraine",             "#C0392B"),
-    ("2023-10-07", "Conflit\nGaza",                 "#E67E22"),
-    ("2024-04-01", "Nouveau ATH\nOr ($2300+)",      "#D4AF37"),
-]
-
 
 def plot_timeseries_multi(df: pd.DataFrame):
     """
@@ -632,10 +615,28 @@ def plot_correlation_heatmap(df: pd.DataFrame):
     fig.show()
 
 
+# ─────────────────────────────────────────────
+# ÉVÉNEMENTS GÉOPOLITIQUES (timeline)
+# ─────────────────────────────────────────────
+
+EVENTS = [
+    ("2008-09-15", "Faillite\nLehman Brothers",  "#E74C3C"),
+    ("2010-05-01", "Crise dette\neuropéenne",      "#E67E22"),
+    ("2011-08-01", "Pic historique\nor ($1900)",   "#D4AF37"),
+    ("2016-06-23", "Brexit",                        "#9B59B6"),
+    ("2018-03-01", "Guerre\ncommerciale US-Chine", "#4A90D9"),
+    ("2020-03-11", "COVID-19\nPandémie",            "#E74C3C"),
+    ("2020-08-01", "ATH Or\n($2075)",               "#D4AF37"),
+    ("2022-02-24", "Invasion\nUkraine",             "#C0392B"),
+    ("2023-10-07", "Conflit\nGaza",                 "#E67E22"),
+    ("2024-04-01", "Nouveau ATH\nOr ($2300+)",      "#D4AF37"),
+]
+
+
 def plot_geopolitical_timeline(df: pd.DataFrame):
     """
     Cours de l'or + GPR en fond + annotations des grands événements.
-    Versions Plotly et Matplotlib.
+    Version Plotly.
     """
 
     gold_series = df["gold"]
