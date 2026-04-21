@@ -20,6 +20,7 @@ import pandas as pd
 import yfinance as yf
 from bs4 import BeautifulSoup
 from datetime import datetime
+from dotenv import load_dotenv
 
 # ============================================================
 # Paramètres globaux
@@ -29,7 +30,12 @@ START_DATE = "2005-01-01"
 END_DATE   = datetime.today().strftime("%Y-%m-%d")
 DATA_DIR   = "data"
 
-FRED_API_KEY = "31da204ceab6c0f0deeb22ba69f9c488"
+
+load_dotenv()  # charge le .env automatiquement
+
+FRED_API_KEY = os.getenv("FRED_API_KEY")
+if FRED_API_KEY is None:
+    raise ValueError("FRED_API_KEY manquante. Vérifiez votre fichier .env")
 
 os.makedirs(DATA_DIR, exist_ok=True)
 
