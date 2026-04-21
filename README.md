@@ -45,7 +45,7 @@ Les données utilisées dans ce projet proviennent de sources publiques et sont 
 
 Notre production est essentiellement localisée dans deux versions d'un fichier ```main.ipynb```.
 - La première ne contient que le code non exécuté et les commentaires entre les cellules. 
-- Le code dans la seconde a été préalablement exécuté, afin de pouvoir présenter également les résultats. 
+- Le code dans la seconde a été préalablement exécuté, afin de pouvoir présenter également les résultats. Certaines visualisations ne s’affichent pas  dans la prévisualisation GitHub du notebook, car elles sont générées avec en mode interactif, un format qui n’est pas entièrement pris en charge par GitHub.
 
 C'est cette version exécutée qui tient lieu de rapport final.
 
