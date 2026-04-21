@@ -3,7 +3,7 @@ from glob import glob
 import pandas as pd
 import numpy as np
 # ============================================================
-# 1) Chargement des fichiers déjà téléchargés
+#  Chargement des fichiers déjà téléchargés
 # ============================================================
 def load_market_data(data_dir="data"):
     """
@@ -22,7 +22,7 @@ def load_market_data(data_dir="data"):
 
 
 # ============================================================
-# 2) Nettoyage d'un DataFrame Yahoo Finance
+#  Nettoyage d'un DataFrame Yahoo Finance
 # ============================================================
 def clean_yahoo_data(df, series_name):
     """
@@ -90,7 +90,7 @@ def clean_yahoo_data(df, series_name):
     return df
 
 # ============================================================
-# 3) Application du nettoyage à toutes les séries
+#  Application du nettoyage à toutes les séries
 # ============================================================
 def clean_all_market_data(raw_data):
     """
@@ -113,7 +113,7 @@ def clean_all_market_data(raw_data):
 
 
 # ============================================================
-# 4) Calcul des log-rendements
+#  Calcul des log-rendements
 # ============================================================
 def add_log_returns(df, series_name):
     """
@@ -145,7 +145,7 @@ def add_log_returns(df, series_name):
 
 
 # ============================================================
-# 5) Construction des séries transformées pour le VAR
+#  Construction des séries transformées pour le VAR
 # ============================================================
 def build_var_series(cleaned_data):
     """
@@ -176,7 +176,7 @@ def build_var_series(cleaned_data):
 
 
 # ============================================================
-# 6) Fusion de toutes les séries sur la date
+#  Fusion de toutes les séries sur la date
 # ============================================================
 def merge_var_series(transformed_data):
     """
@@ -212,7 +212,7 @@ def merge_var_series(transformed_data):
 
 
 # ============================================================
-# 7) Suppression des NA créés par les rendements
+#  Suppression des NA créés par les rendements
 # ============================================================
 def drop_missing_var_rows(df):
     """
@@ -232,7 +232,7 @@ def drop_missing_var_rows(df):
 
 
 # ============================================================
-# 8) Pipeline complet de preprocessing
+#  Pipeline complet de preprocessing
 # ============================================================
 def prepare_var_dataset(data_dir="data"):
     """
@@ -340,7 +340,7 @@ def prepare_daily_macro_exog(data_dir="data", daily_calendar_df=None):
 
 
 # ============================================================
-# 15) Split train / test des exogènes macro par date
+#  Split train / test des exogènes macro par date
 # ============================================================
 def split_macro_exog_train_test_by_date(
     macro_exog_df,
@@ -407,3 +407,115 @@ def split_macro_exog_train_test_by_date(
         raise ValueError("Le sous-échantillon test des exogènes est vide.")
 
     return train_exog_df.reset_index(drop=True), test_exog_df.reset_index(drop=True)
+
+
+# ─────────────────────────────────────────────
+#  Préparation des données pour les visualisations plotly
+# ─────────────────────────────────────────────
+
+DATA_DIR = "data"
+
+def _load_yahoo(name: str) -> pd.Series:
+    """Charge un CSV Yahoo Finance et retourne la colonne 'Close' mensuelle."""
+    path = os.path.join(DATA_DIR, f"{name}.csv")
+    df = pd.read_csv(path, header=[0, 1], index_col=0, parse_dates=True)
+    # Aplatir les colonnes multi-niveaux
+    df.columns = ["_".join(col).strip() for col in df.columns]
+    close_col = [c for c in df.columns if "Close" in c][0]
+    series = df[close_col].dropna()
+    series.index = pd.to_datetime(series.index)
+    # Rééchantillonnage mensuel (dernier jour du mois)
+    return series.resample("ME").mean().rename(name)
+
+
+def _load_cpi() -> pd.Series:
+    """Charge le CPI depuis data/cpi.csv."""
+    path = os.path.join(DATA_DIR, "cpi.csv")
+    df = pd.read_csv(path, parse_dates=["date"])
+    df = df.set_index("date").sort_index()
+    series = df["cpi"].dropna()
+    series.index = pd.to_datetime(series.index)
+    return series.resample("ME").mean().rename("cpi")
+
+
+def _load_gpr() -> pd.Series:
+    """Charge le GPR depuis le fichier Excel brut."""
+    # Cherche le fichier brut (xls ou xlsx)
+    raw_xls  = os.path.join(DATA_DIR, "gpr_raw.xls")
+    raw_xlsx = os.path.join(DATA_DIR, "gpr_raw.xlsx")
+
+    path = raw_xlsx if os.path.exists(raw_xlsx) else raw_xls
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Fichier GPR introuvable dans {DATA_DIR}/")
+
+    # Lecture robuste : on essaie plusieurs moteurs
+    for engine in ("openpyxl", "xlrd", None):
+        try:
+            kwargs = {"engine": engine} if engine else {}
+            xl = pd.read_excel(path, sheet_name=None, **kwargs)
+            break
+        except Exception:
+            continue
+
+    # On prend le premier onglet qui contient "GPR" dans ses colonnes
+    gpr_series = None
+    for sheet_name, sheet_df in xl.items():
+        cols_lower = [str(c).lower() for c in sheet_df.columns]
+        gpr_cols   = [c for c in sheet_df.columns if "gpr" in str(c).lower()]
+
+        # Chercher une colonne date/year et une colonne GPR
+        date_cols = [c for c in sheet_df.columns
+                     if any(k in str(c).lower() for k in ("date", "year", "month"))]
+
+        if gpr_cols and date_cols:
+            tmp = sheet_df[[date_cols[0], gpr_cols[0]]].copy()
+            tmp.columns = ["date", "gpr"]
+            tmp["date"] = pd.to_datetime(tmp["date"], errors="coerce")
+            tmp = tmp.dropna(subset=["date", "gpr"])
+            tmp = tmp.set_index("date").sort_index()
+            gpr_series = tmp["gpr"].resample("ME").last().rename("gpr")
+            print(f"GPR chargé depuis l'onglet '{sheet_name}' ({len(gpr_series)} obs)")
+            break
+
+        # Fallback : si la feuille a year+month
+        if "year" in cols_lower and "month" in cols_lower:
+            tmp = sheet_df.copy()
+            tmp.columns = [str(c).lower() for c in tmp.columns]
+            gpr_col = next((c for c in tmp.columns if "gpr" in c), None)
+            if gpr_col:
+                tmp["date"] = pd.to_datetime(
+                    tmp["year"].astype(int).astype(str) + "-" +
+                    tmp["month"].astype(int).astype(str).str.zfill(2) + "-01",
+                    errors="coerce"
+                )
+                tmp = tmp.dropna(subset=["date", gpr_col])
+                tmp = tmp.set_index("date").sort_index()
+                gpr_series = tmp[gpr_col].resample("ME").last().rename("gpr")
+                print(f"GPR chargé (year+month) depuis '{sheet_name}' ({len(gpr_series)} obs)")
+                break
+
+    if gpr_series is None:
+        raise ValueError("Impossible de parser le fichier GPR. Vérifiez la structure Excel.")
+
+    return gpr_series
+
+
+def load_and_merge_data() -> pd.DataFrame:
+    """
+    Charge toutes les sources et retourne un DataFrame mensuel fusionné.
+    Colonnes : gold, dxy, sp500, vix, cpi, gpr
+    """
+    print("Chargement des données...")
+    gold  = _load_yahoo("gold")
+    dxy   = _load_yahoo("dxy")
+    sp500 = _load_yahoo("sp500")
+    vix   = _load_yahoo("vix")
+    cpi   = _load_cpi()
+    gpr   = _load_gpr()
+
+    df = pd.concat([gold, dxy, sp500, vix, cpi, gpr], axis=1)
+    df = df.dropna()
+    df.index.name = "date"
+    print(f"DataFrame fusionné : {df.shape[0]} observations, {df.shape[1]} variables")
+    print(f"Période : {df.index[0].date()} → {df.index[-1].date()}")
+    return df

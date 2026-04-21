@@ -2,12 +2,6 @@
 data_vis.py
 ===========
 Visualisations pour le projet de prédiction du prix de l'or via VAR.
-
-Fonctions exportées :
-    - load_and_merge_data()          -> DataFrame fusionné mensuel
-    - plot_timeseries_multi(df)      -> Séries temporelles multi-variables (Plotly + Matplotlib)
-    - plot_correlation_heatmap(df)   -> Heatmap des corrélations (Plotly + Matplotlib)
-    - plot_geopolitical_timeline(df) -> Timeline événementielle (Plotly + Matplotlib)
 """
 
 import matplotlib.pyplot as plt
@@ -480,117 +474,6 @@ def _hex_to_rgba(hex_color: str, alpha: float = 0.12) -> str:
 OUTPUT_DIR = "figures"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-DATA_DIR = "data"
-
-# ─────────────────────────────────────────────
-#  Préparation des données pour des visualisations plotly
-# ─────────────────────────────────────────────
-
-def _load_yahoo(name: str) -> pd.Series:
-    """Charge un CSV Yahoo Finance et retourne la colonne 'Close' mensuelle."""
-    path = os.path.join(DATA_DIR, f"{name}.csv")
-    df = pd.read_csv(path, header=[0, 1], index_col=0, parse_dates=True)
-    # Aplatir les colonnes multi-niveaux
-    df.columns = ["_".join(col).strip() for col in df.columns]
-    close_col = [c for c in df.columns if "Close" in c][0]
-    series = df[close_col].dropna()
-    series.index = pd.to_datetime(series.index)
-    # Rééchantillonnage mensuel (dernier jour du mois)
-    return series.resample("ME").mean().rename(name)
-
-
-def _load_cpi() -> pd.Series:
-    """Charge le CPI depuis data/cpi.csv."""
-    path = os.path.join(DATA_DIR, "cpi.csv")
-    df = pd.read_csv(path, parse_dates=["date"])
-    df = df.set_index("date").sort_index()
-    series = df["cpi"].dropna()
-    series.index = pd.to_datetime(series.index)
-    return series.resample("ME").mean().rename("cpi")
-
-
-def _load_gpr() -> pd.Series:
-    """Charge le GPR depuis le fichier Excel brut."""
-    # Cherche le fichier brut (xls ou xlsx)
-    raw_xls  = os.path.join(DATA_DIR, "gpr_raw.xls")
-    raw_xlsx = os.path.join(DATA_DIR, "gpr_raw.xlsx")
-
-    path = raw_xlsx if os.path.exists(raw_xlsx) else raw_xls
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Fichier GPR introuvable dans {DATA_DIR}/")
-
-    # Lecture robuste : on essaie plusieurs moteurs
-    for engine in ("openpyxl", "xlrd", None):
-        try:
-            kwargs = {"engine": engine} if engine else {}
-            xl = pd.read_excel(path, sheet_name=None, **kwargs)
-            break
-        except Exception:
-            continue
-
-    # On prend le premier onglet qui contient "GPR" dans ses colonnes
-    gpr_series = None
-    for sheet_name, sheet_df in xl.items():
-        cols_lower = [str(c).lower() for c in sheet_df.columns]
-        gpr_cols   = [c for c in sheet_df.columns if "gpr" in str(c).lower()]
-
-        # Chercher une colonne date/year et une colonne GPR
-        date_cols = [c for c in sheet_df.columns
-                     if any(k in str(c).lower() for k in ("date", "year", "month"))]
-
-        if gpr_cols and date_cols:
-            tmp = sheet_df[[date_cols[0], gpr_cols[0]]].copy()
-            tmp.columns = ["date", "gpr"]
-            tmp["date"] = pd.to_datetime(tmp["date"], errors="coerce")
-            tmp = tmp.dropna(subset=["date", "gpr"])
-            tmp = tmp.set_index("date").sort_index()
-            gpr_series = tmp["gpr"].resample("ME").last().rename("gpr")
-            print(f"GPR chargé depuis l'onglet '{sheet_name}' ({len(gpr_series)} obs)")
-            break
-
-        # Fallback : si la feuille a year+month
-        if "year" in cols_lower and "month" in cols_lower:
-            tmp = sheet_df.copy()
-            tmp.columns = [str(c).lower() for c in tmp.columns]
-            gpr_col = next((c for c in tmp.columns if "gpr" in c), None)
-            if gpr_col:
-                tmp["date"] = pd.to_datetime(
-                    tmp["year"].astype(int).astype(str) + "-" +
-                    tmp["month"].astype(int).astype(str).str.zfill(2) + "-01",
-                    errors="coerce"
-                )
-                tmp = tmp.dropna(subset=["date", gpr_col])
-                tmp = tmp.set_index("date").sort_index()
-                gpr_series = tmp[gpr_col].resample("ME").last().rename("gpr")
-                print(f"GPR chargé (year+month) depuis '{sheet_name}' ({len(gpr_series)} obs)")
-                break
-
-    if gpr_series is None:
-        raise ValueError("Impossible de parser le fichier GPR. Vérifiez la structure Excel.")
-
-    return gpr_series
-
-
-def load_and_merge_data() -> pd.DataFrame:
-    """
-    Charge toutes les sources et retourne un DataFrame mensuel fusionné.
-    Colonnes : gold, dxy, sp500, vix, cpi, gpr
-    """
-    print("Chargement des données...")
-    gold  = _load_yahoo("gold")
-    dxy   = _load_yahoo("dxy")
-    sp500 = _load_yahoo("sp500")
-    vix   = _load_yahoo("vix")
-    cpi   = _load_cpi()
-    gpr   = _load_gpr()
-
-    df = pd.concat([gold, dxy, sp500, vix, cpi, gpr], axis=1)
-    df = df.dropna()
-    df.index.name = "date"
-    print(f"DataFrame fusionné : {df.shape[0]} observations, {df.shape[1]} variables")
-    print(f"Période : {df.index[0].date()} → {df.index[-1].date()}")
-    return df
-
 
 # ─────────────────────────────────────────────
 # ÉVÉNEMENTS GÉOPOLITIQUES (timeline)
@@ -1005,6 +888,7 @@ def plot_scatter_matrix(df: pd.DataFrame, save: bool = True):
 
     fig.show()
 
+DATA_DIR = "data"
 
 def plot_return_distributions(var_df, save=True):
 
@@ -1076,81 +960,53 @@ def plot_return_distributions(var_df, save=True):
  
 def plot_gold_daily(save: bool = True):
     """
-    Trace le prix de l'or en données quotidiennes brutes (avant rééchantillonnage).
-    Candlestick OHLC + moyennes mobiles 50j / 200j + volume en sous-graphique.
+    Trace le prix de l'or en données quotidiennes brutes.
+    Courbe Close + aire translucide + MM50j + MM200j.
     """
  
     path = os.path.join(DATA_DIR, "gold.csv")
     if not os.path.exists(path):
         raise FileNotFoundError(f"Fichier introuvable : {path}. Lance download_all() d'abord.")
  
-    # ── Chargement du CSV brut Yahoo Finance ───
+    # ── Chargement ──────────────────────────────
     df_raw = pd.read_csv(path, header=[0, 1], index_col=0, parse_dates=True)
     df_raw.columns = ["_".join(col).strip() for col in df_raw.columns]
     df_raw.index   = pd.to_datetime(df_raw.index)
  
-    open_col   = next(c for c in df_raw.columns if "Open"   in c)
-    high_col   = next(c for c in df_raw.columns if "High"   in c)
-    low_col    = next(c for c in df_raw.columns if "Low"    in c)
-    close_col  = next(c for c in df_raw.columns if "Close"  in c and "Adj" not in c)
-    volume_col = next((c for c in df_raw.columns if "Volume" in c), None)
+    close_col = next(c for c in df_raw.columns if "Close" in c and "Adj" not in c)
+    df_raw    = df_raw.dropna(subset=[close_col])
  
-    df_raw = df_raw.dropna(subset=[close_col])
- 
-    # Moyennes mobiles
     df_raw["ma50"]  = df_raw[close_col].rolling(50).mean()
     df_raw["ma200"] = df_raw[close_col].rolling(200).mean()
  
-    # ── Subplots : prix + volume ────────────────
-    rows        = 2 if volume_col else 1
-    row_heights = [0.75, 0.25] if volume_col else [1.0]
+    # ── Figure ──────────────────────────────────
+    fig = go.Figure()
  
-    fig = make_subplots(
-        rows=rows, cols=1,
-        shared_xaxes=True,
-        vertical_spacing=0.04,
-        row_heights=row_heights,
-    )
- 
-    # Candlestick
-    fig.add_trace(go.Candlestick(
-        x=df_raw.index,
-        open=df_raw[open_col], high=df_raw[high_col],
-        low=df_raw[low_col],   close=df_raw[close_col],
-        name="Or (OHLC)",
-        increasing=dict(line=dict(color="#D4AF37"), fillcolor="#D4AF37"),
-        decreasing=dict(line=dict(color="#6B4E0A"), fillcolor="#6B4E0A"),
-    ), row=1, col=1)
+    # Aire translucide
+    fig.add_trace(go.Scatter(
+        x=df_raw.index, y=df_raw[close_col],
+        fill="tozeroy",
+        fillcolor="rgba(212,175,55,0.08)",
+        line=dict(color="#D4AF37", width=1.6),
+        name="Prix de clôture",
+        hovertemplate="%{x|%d %b %Y}<br>$%{y:,.0f}<extra></extra>",
+    ))
  
     # MM 50j
     fig.add_trace(go.Scatter(
         x=df_raw.index, y=df_raw["ma50"],
         name="MM 50j",
-        line=dict(color="#4A90D9", width=1.3, dash="dot"),
+        line=dict(color="#4A90D9", width=1.4, dash="dot"),
         hovertemplate="MM50: $%{y:,.0f}<extra></extra>",
-    ), row=1, col=1)
+    ))
  
     # MM 200j
     fig.add_trace(go.Scatter(
         x=df_raw.index, y=df_raw["ma200"],
         name="MM 200j",
-        line=dict(color="#E74C3C", width=1.3, dash="dash"),
+        line=dict(color="#E74C3C", width=1.4, dash="dash"),
         hovertemplate="MM200: $%{y:,.0f}<extra></extra>",
-    ), row=1, col=1)
- 
-    # Volume
-    if volume_col:
-        colors_vol = [
-            "#D4AF37" if c >= o else "#6B4E0A"
-            for c, o in zip(df_raw[close_col], df_raw[open_col])
-        ]
-        fig.add_trace(go.Bar(
-            x=df_raw.index, y=df_raw[volume_col],
-            name="Volume",
-            marker_color=colors_vol,
-            opacity=0.55,
-            hovertemplate="%{x|%d %b %Y}<br>Vol: %{y:,.0f}<extra></extra>",
-        ), row=2, col=1)
+    ))
  
     fig.update_layout(
         template=PLOTLY_TEMPLATE,
@@ -1158,23 +1014,19 @@ def plot_gold_daily(save: bool = True):
             text="<b>Prix de l'Or — Données quotidiennes (2005–présent)</b>",
             font=dict(size=17, color="#D4AF37"), x=0.5,
         ),
-        height=650,
+        height=520,
         paper_bgcolor="#0D0D0D",
         plot_bgcolor="#111111",
         font=dict(color="#CCCCCC", family="Georgia"),
-        xaxis_rangeslider_visible=False,
         hovermode="x unified",
         legend=dict(
-            orientation="h", x=0.5, xanchor="center", y=1.02,
+            orientation="h", x=0.5, xanchor="center", y=1.04,
             bgcolor="rgba(0,0,0,0)", font=dict(size=10),
         ),
+        yaxis=dict(gridcolor="#1E1E1E", tickprefix="$"),
+        xaxis=dict(gridcolor="#1E1E1E", tickformat="%Y"),
         margin=dict(t=80, b=40, l=60, r=30),
     )
- 
-    fig.update_xaxes(gridcolor="#1E1E1E", tickformat="%Y")
-    fig.update_yaxes(gridcolor="#1E1E1E", tickprefix="$", row=1, col=1)
-    if volume_col:
-        fig.update_yaxes(gridcolor="#1E1E1E", row=2, col=1)
  
     if save:
         out = os.path.join(OUTPUT_DIR, "gold_daily.html")
@@ -1182,4 +1034,3 @@ def plot_gold_daily(save: bool = True):
         print(f"[Plotly] Or quotidien → {out}")
  
     fig.show()
-
