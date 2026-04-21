@@ -1033,4 +1033,176 @@ def plot_gold_daily(save: bool = True):
         fig.write_html(out)
         print(f"[Plotly] Or quotidien → {out}")
  
+<<<<<<< HEAD
     fig.show()
+=======
+    fig.show()
+
+def check_monte_carlo_price_summary_dataframe(
+    simulated_price_summary_df,
+    require_median=True
+):
+    """
+    Vérifie que le DataFrame résumé Monte Carlo des prix contient bien
+    les colonnes attendues.
+
+    Paramètres
+    ----------
+    simulated_price_summary_df : pd.DataFrame
+        DataFrame contenant au minimum :
+        - date
+        - gold_price_actual
+        - gold_price_sim_mean
+        - gold_price_sim_q05
+        - gold_price_sim_q95
+        - éventuellement gold_price_sim_median
+    require_median : bool
+        Si True, impose la présence de la colonne `gold_price_sim_median`.
+    """
+    required_columns = [
+        "date",
+        "gold_price_actual",
+        "gold_price_sim_mean",
+        "gold_price_sim_q05",
+        "gold_price_sim_q95"
+    ]
+
+    if require_median:
+        required_columns.append("gold_price_sim_median")
+
+    missing_cols = [col for col in required_columns if col not in simulated_price_summary_df.columns]
+
+    if missing_cols:
+        raise ValueError(
+            f"Colonnes manquantes dans simulated_price_summary_df : {missing_cols}. "
+            f"Colonnes disponibles : {list(simulated_price_summary_df.columns)}"
+        )
+
+
+def plot_gold_price_monte_carlo_test(
+    simulated_price_summary_df,
+    figsize=(14, 6),
+    show_median=True,
+    show_band=True,
+    major="2year",
+    date_format="%Y"
+):
+    """
+    Trace sur la période de test :
+    - le prix observé de l'or
+    - la moyenne des prix simulés
+    - éventuellement la médiane des prix simulés
+    - éventuellement une bande d'incertitude entre q05 et q95
+
+    Paramètres
+    ----------
+    simulated_price_summary_df : pd.DataFrame
+        Doit contenir au minimum :
+        - date
+        - gold_price_actual
+        - gold_price_sim_mean
+        - gold_price_sim_q05
+        - gold_price_sim_q95
+        - éventuellement gold_price_sim_median
+    figsize : tuple
+        Taille de la figure.
+    show_median : bool
+        Si True, trace la médiane des prix simulés.
+    show_band : bool
+        Si True, trace la bande d'incertitude [q05, q95].
+    major : str
+        Fréquence des ticks majeurs de l'axe des dates.
+    date_format : str
+        Format d'affichage des dates.
+    """
+    check_monte_carlo_price_summary_dataframe(
+        simulated_price_summary_df,
+        require_median=show_median
+    )
+
+    df = simulated_price_summary_df.copy()
+    df["date"] = pd.to_datetime(df["date"])
+
+    numeric_columns = [
+        "gold_price_actual",
+        "gold_price_sim_mean",
+        "gold_price_sim_q05",
+        "gold_price_sim_q95"
+    ]
+
+    if show_median:
+        numeric_columns.append("gold_price_sim_median")
+
+    for col in numeric_columns:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    if df[numeric_columns].isna().any().any():
+        raise ValueError(
+            "Des valeurs manquantes ont été détectées dans les colonnes "
+            "utilisées pour le graphique Monte Carlo."
+        )
+
+    if show_band and (df["gold_price_sim_q05"] > df["gold_price_sim_q95"]).any():
+        raise ValueError(
+            "Certaines valeurs de gold_price_sim_q05 sont supérieures à gold_price_sim_q95."
+        )
+
+    df = df.sort_values("date").reset_index(drop=True)
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    # --------------------------------------------------------
+    # Bande d'incertitude Monte Carlo
+    # --------------------------------------------------------
+    if show_band:
+        ax.fill_between(
+            df["date"],
+            df["gold_price_sim_q05"],
+            df["gold_price_sim_q95"],
+            color="#D4AF37",
+            alpha=0.20,
+            label="Bande Monte Carlo 5% - 95%"
+        )
+
+    # --------------------------------------------------------
+    # Séries principales
+    # --------------------------------------------------------
+    ax.plot(
+        df["date"],
+        df["gold_price_actual"],
+        label="Prix observé de l'or",
+        color="black",
+        linewidth=2
+    )
+
+    ax.plot(
+        df["date"],
+        df["gold_price_sim_mean"],
+        label="Moyenne des prix simulés",
+        color="#D4AF37",
+        linestyle="--",
+        linewidth=2
+    )
+
+    if show_median:
+        ax.plot(
+            df["date"],
+            df["gold_price_sim_median"],
+            label="Médiane des prix simulés",
+            color="#4A90D9",
+            linestyle=":",
+            linewidth=2
+        )
+
+    ax.set_title("Prix observé vs simulation Monte Carlo sur le test")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Prix")
+    ax.legend()
+    ax.grid(True)
+
+    format_date_axis(ax, major=major, date_format=date_format)
+
+    plt.tight_layout()
+    plt.show()
+
+>>>>>>> 523f3f915739af5b10117a59cfc4b23861de3e50
