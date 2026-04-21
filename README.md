@@ -11,22 +11,22 @@
 
 ## 1. Définitions <a name="definitions">
 
-gold : prix de l’or
+**gold** : prix de l’or
 Prix du métal précieux sur les marchés financiers (USD/once). Actif refuge utilisé en période d’incertitude. Variable cible du modèle.
 
-dxy : US Dollar Index
+**dxy** : US Dollar Index
 Indice mesurant la force du dollar face à un panier de devises. Généralement inversement corrélé au prix de l’or.
 
-sp500 : indice S&P 500
+**sp500** : indice S&P 500
 Indice des 500 plus grandes entreprises américaines. Reflète le marché actions et le sentiment global de risque.
 
-vix : indice CBOE Volatility Index (VIX)
+**vix** : indice CBOE Volatility Index (VIX)
 Mesure la volatilité anticipée du marché. Indicateur de stress financier (“indice de la peur”).
 
-cpi : inflation (Consumer Price Index)
+**cpi** : inflation (Consumer Price Index)
 Indice mesurant l’évolution des prix à la consommation. Indicateur clé de l’inflation et des politiques monétaires.
 
-gpr : indice de risque géopolitique
+**gpr** : indice de risque géopolitique
 Indice basé sur l’analyse de la presse mesurant les tensions géopolitiques. Capture les chocs exogènes affectant les marchés.
 
 ## 2. Objectifs <a name="objectifs">
@@ -35,11 +35,11 @@ L’objectif de ce projet est de modéliser et prédire le prix de l’or à par
 
 ## 3. Sources des données <a name="sources">
 
-Nous nous sommes reposés de façon essentielle sur les sources suivantes :
+Les données utilisées dans ce projet proviennent de sources publiques et sont récupérées de différentes manières :
 
-    - Yahoo Finance  : Or (GC=F), DXY, S&P 500, VIX
-    - FRED (St. Louis Fed) : CPI (CPIAUCSL)
-    - Matteo Iacoviello    : Geopolitical Risk Index (GPR)
+    - Yahoo Finance : données financières récupérées via l’API Python yfinance (prix de l’or, DXY, S&P 500, VIX)
+    - Federal Reserve : Bank of St. Louis: données macroéconomiques récupérées via l’API REST FRED (inflation – CPI)
+    - Matteo Iacoviello : indice GPR récupéré par web scraping (téléchargement automatique du fichier Excel depuis le site officiel)
 
 ## 4. Présentation du dépôt <a name=pres>
 
